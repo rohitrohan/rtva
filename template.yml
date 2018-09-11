@@ -32,15 +32,6 @@ Parameters:
     MinLength: "1"
     Description: "Enter the name of the S3 bucket containing source .zip files."
 
-  ImageProcessorSourceS3KeyParameter:
-    Type: String
-    MinLength: "1"
-    Description: "Enter the name of the S3 key of Image Processor lambda function .zip file."
-
-  FrameFetcherSourceS3KeyParameter:
-    Type: String
-    MinLength: "1"
-    Description: "Enter the name of the S3 key of Frame Fetcher lambda function .zip file."
 
 
 Resources:
@@ -105,15 +96,13 @@ Resources:
 
 
   ImageProcessorLambda:
-    Type: AWS::Lambda::Function
+    Type: AWS::Serverless::Function
     Properties:
       FunctionName: imageprocessor
       Description: "Function processes frame images fetched from a Kinesis stream."
       Handler: "imageprocessor.handler"
       Role: !GetAtt ImageProcessorLambdaExecutionRole.Arn
-      Code:
-        S3Bucket: !Ref SourceS3BucketParameter
-        S3Key: !Ref ImageProcessorSourceS3KeyParameter
+      CodeUri: .
       Timeout: 40 #seconds
       MemorySize: 128 #MB
       Runtime: python3.6
@@ -121,16 +110,16 @@ Resources:
       - FrameStream
       - ImageProcessorLambdaExecutionRole
 
+
+
   FrameFetcherLambda:
-    Type: AWS::Lambda::Function
+    Type: AWS::Serverless::Function
     Properties:
       FunctionName: "framefetcher"
       Description: "Function responds to a GET request by returning a list of frames up to a certain fetch horizon."
       Handler: "framefetcher.handler"
       Role: !GetAtt FrameFetcherLambdaExecutionRole.Arn
-      Code:
-        S3Bucket: !Ref SourceS3BucketParameter
-        S3Key: !Ref FrameFetcherSourceS3KeyParameter
+      CodeUri: .
       Timeout: 10 #seconds
       MemorySize: 128 #MB
       Runtime: python3.6
