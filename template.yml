@@ -3,38 +3,169 @@ Transform:
 - AWS::Serverless-2016-10-31
 - AWS::CodeStar
 
-Parameters:
-  ProjectId:
-    Type: String
-    Description: CodeStar projectId used to associate new resources to team members
+Description: " Template for the resources required by real time crowd analysis "
 
-# Enable blue/green deployments using this Globals section. For instructions, see the AWS CodeStar User Guide:
-# https://docs.aws.amazon.com/codestar/latest/userguide/how-to-modify-serverless-project.html?icmpid=docs_acs_rm_tr
-#
-# Globals:
-#   Function:
-#     AutoPublishAlias: live
-#     DeploymentPreference:
-#       Enabled: true
-#       Type: Canary10Percent5Minutes
+Parameters:
+
+  FrameS3BucketNameParameter:
+    Type: String
+    MinLength : "1"
+    Description: "Name of the S3 bucket for storage of captured frames."
+
+  KinesisStreamNameParameter:
+    Type: String
+    Default: "FrameStream"
+    Description: "Name of the Kinesis stream to receive frames from video capture client."
+
+  DDBTableNameParameter:
+    Type: String
+    Default: "EnrichedFrame"
+    Description: "Name of the DynamoDB table for persistence & querying of captured frames metadata."
+
+  DDBGlobalSecondaryIndexNameParameter:
+    Type: String
+    Default: "processed_year_month-processed_timestamp-index"
+    Description: "Name of the DDB Global Secondary Index for querying of captured frames by Web UI."
+
+  SourceS3BucketParameter:
+    Type: String
+    MinLength: "1"
+    Description: "Enter the name of the S3 bucket containing source .zip files."
+
+  ImageProcessorSourceS3KeyParameter:
+    Type: String
+    MinLength: "1"
+    Description: "Enter the name of the S3 key of Image Processor lambda function .zip file."
+
+  FrameFetcherSourceS3KeyParameter:
+    Type: String
+    MinLength: "1"
+    Description: "Enter the name of the S3 key of Frame Fetcher lambda function .zip file."
+
 
 Resources:
-  HelloWorld:
-    Type: AWS::Serverless::Function
+
+  FrameS3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: !Ref FrameS3BucketNameParameter
+
+  ImageProcessorLambdaExecutionRole:
+    Type: AWS::IAM::Role
     Properties:
-      Handler: index.handler
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+            - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonKinesisReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonRekognitionReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        - arn:aws:iam::aws:policy/AmazonSNSFullAccess
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+      Path: "/"
+    DependsOn:
+      - FrameS3Bucket
+      - EnrichedFrameTable
+
+
+  FrameFetcherLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+            - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+      Path: "/"
+    DependsOn:
+    - FrameS3Bucket
+    - EnrichedFrameTable
+
+
+  FrameStream:
+    Type: "AWS::Kinesis::Stream"
+    Properties:
+      Name: !Ref KinesisStreamNameParameter
+      ShardCount: 1
+
+
+  ImageProcessorLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: imageprocessor
+      Description: "Function processes frame images fetched from a Kinesis stream."
+      Handler: "imageprocessor.handler"
+      Role: !GetAtt ImageProcessorLambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref SourceS3BucketParameter
+        S3Key: !Ref ImageProcessorSourceS3KeyParameter
+      Timeout: 40 #seconds
+      MemorySize: 128 #MB
       Runtime: python3.6
-      Role:
-        Fn::ImportValue:
-          !Join ['-', [!Ref 'ProjectId', !Ref 'AWS::Region', 'LambdaTrustRole']]
-      Events:
-        GetEvent:
-          Type: Api
-          Properties:
-            Path: /
-            Method: get
-        PostEvent:
-          Type: Api
-          Properties:
-            Path: /
-            Method: post
+    DependsOn:
+      - FrameStream
+      - ImageProcessorLambdaExecutionRole
+
+  FrameFetcherLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: "framefetcher"
+      Description: "Function responds to a GET request by returning a list of frames up to a certain fetch horizon."
+      Handler: "framefetcher.handler"
+      Role: !GetAtt FrameFetcherLambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref SourceS3BucketParameter
+        S3Key: !Ref FrameFetcherSourceS3KeyParameter
+      Timeout: 10 #seconds
+      MemorySize: 128 #MB
+      Runtime: python3.6
+    DependsOn:
+      - FrameFetcherLambdaExecutionRole
+
+  EnrichedFrameTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      TableName: !Ref DDBTableNameParameter
+      KeySchema:
+        - KeyType: "HASH"
+          AttributeName: "frame_id"
+      AttributeDefinitions:
+        - AttributeName: "frame_id"
+          AttributeType: "S"
+        - AttributeName: "processed_timestamp"
+          AttributeType: "N"
+        - AttributeName: "processed_year_month"
+          AttributeType: "S"
+      ProvisionedThroughput:
+            WriteCapacityUnits: 10
+            ReadCapacityUnits: 10
+      GlobalSecondaryIndexes:
+        - IndexName: !Ref DDBGlobalSecondaryIndexNameParameter
+          Projection:
+            ProjectionType: "ALL"
+          ProvisionedThroughput:
+            WriteCapacityUnits: 10
+            ReadCapacityUnits: 10
+          KeySchema:
+          - KeyType: "HASH"
+            AttributeName: "processed_year_month"
+          - KeyType: "RANGE"
+            AttributeName: "processed_timestamp"
+
+
+
