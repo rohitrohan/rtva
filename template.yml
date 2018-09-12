@@ -66,6 +66,16 @@ Resources:
       - FrameS3Bucket
       - EnrichedFrameTable
 
+  EventSourceMapping:
+    Type: "AWS::Lambda::EventSourceMapping"
+    Properties:
+      EventSourceArn: !GetAtt FrameStream.Arn
+      FunctionName: !GetAtt ImageProcessorLambda.Arn
+      StartingPosition: "TRIM_HORIZON"
+    DependsOn:
+      - FrameStream
+      - ImageProcessorLambda
+
 
   FrameFetcherLambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -107,9 +117,12 @@ Resources:
       Timeout: 40 #seconds
       MemorySize: 128 #MB
       Runtime: python3.6
+      Events:
+
     DependsOn:
       - FrameStream
       - ImageProcessorLambdaExecutionRole
+
 
 
 
