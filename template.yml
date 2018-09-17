@@ -3,13 +3,13 @@ Transform:
 - AWS::Serverless-2016-10-31
 - AWS::CodeStar
 
-Description: " Template for the resources required by real time crowd analysis "
+Description: 'Template for the resources required by real time crowd analysis'
 
 Parameters:
 
   ProjectId:
     Type: String
-    Description: CodeStar projectId used to associate new resources to team members
+    Description: "CodeStar projectId used to associate new resources to team members"
 
   FrameS3BucketNameParameter:
     Type: String
@@ -46,7 +46,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
         - Effect: Allow
           Principal:
