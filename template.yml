@@ -50,9 +50,9 @@ Resources:
       Properties:
         BucketName: !Ref WebsiteS3BucketNameParameter
         AccessControl: PublicRead
-#        WebsiteConfiguration:
-#          IndexDocument: index.html
-#          ErrorDocument: error.html
+        WebsiteConfiguration:
+          IndexDocument: index.html
+          ErrorDocument: error.html
       DeletionPolicy: Retain
 
   ImageProcessorLambdaExecutionRole:
