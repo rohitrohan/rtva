@@ -9,12 +9,19 @@ Parameters:
 
   ProjectId:
     Type: String
+    Default: "rtva"
     Description: "CodeStar projectId used to associate new resources to team members"
 
   FrameS3BucketNameParameter:
     Type: String
     MinLength : "1"
     Default: "coxauto-frame-bucket"
+    Description: "Name of the S3 bucket for storage of captured frames."
+
+  WebsiteS3BucketNameParameter:
+    Type: String
+    MinLength : "1"
+    Default: "rtva-dashboard"
     Description: "Name of the S3 bucket for storage of captured frames."
 
   KinesisStreamNameParameter:
@@ -33,14 +40,22 @@ Parameters:
     Description: "Name of the DDB Global Secondary Index for querying of captured frames by Web UI."
 
 
-
-
 Resources:
 
   FrameS3Bucket:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: !Ref FrameS3BucketNameParameter
+
+  WebsiteS3Bucket:
+      Type: 'AWS::S3::Bucket'
+      Properties:
+        BucketName: !Ref WebsiteS3BucketNameParameter
+        AccessControl: PublicRead
+        WebsiteConfiguration:
+          IndexDocument: index.html
+          ErrorDocument: error.html
+      DeletionPolicy: Retain
 
   ImageProcessorLambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -111,7 +126,7 @@ Resources:
     Properties:
       FunctionName: imageprocessor
       Description: "Function processes frame images fetched from a Kinesis stream."
-      Handler: "imageprocessor.handler"
+      Handler: "lambda/imageprocessor.handler"
       Role: !GetAtt ImageProcessorLambdaExecutionRole.Arn
       CodeUri: .
       Timeout: 40 #seconds
@@ -124,14 +139,12 @@ Resources:
       - ImageProcessorLambdaExecutionRole
 
 
-
-
   FrameFetcherLambda:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: "framefetcher"
       Description: "Function responds to a GET request by returning a list of frames up to a certain fetch horizon."
-      Handler: "framefetcher.handler"
+      Handler: "lambda/framefetcher.handler"
       Role: !GetAtt FrameFetcherLambdaExecutionRole.Arn
       CodeUri: .
       Timeout: 10 #seconds
@@ -172,3 +185,17 @@ Resources:
 
 
 
+Outputs:
+  WebsiteURL:
+    Value: !GetAtt
+      - WebsiteS3Bucket
+      - WebsiteURL
+    Description: URL for website hosted on S3
+  S3BucketSecureURL:
+    Value: !Join
+      - ''
+      - - 'https://'
+        - !GetAtt
+          - WebsiteS3Bucket
+          - DomainName
+    Description: Name of S3 bucket to hold website content

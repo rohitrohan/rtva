@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<head>
+    <style>
+        .item1 {
+            grid-area: myArea;
+            font-family: Verdana;
+            font-size: 30px;
+        }
+        .item2 {
+            grid-area: myArea2;
+            font-family: Verdana;
+            font-size: 30px;
+        }
+        .item3 {
+            grid-area: myArea3;
+            font-family: Verdana;
+            font-size: 30px;
+        }
+
+        .item4 {
+            grid-area: myArea4;
+            font-family: Verdana;
+            font-size: 30px;
+        }
+
+        .item5 {
+            grid-area: myArea5;
+            font-family: Verdana;
+            font-size: 30px;
+        }
+
+        .item6 {
+            grid-area: myArea6;
+            font-family: Verdana;
+            font-size: 30px;
+        }
+        .grid-container {
+            display: grid;
+            grid-template:
+                    'myArea myArea myArea2 myArea3 myArea4 myArea5 myArea6 .'
+                    'myArea myArea myArea2 myArea3 myArea4 myArea5 myArea6 .'
+                    'myArea myArea myArea2 myArea3 myArea4 myArea5 myArea6 .'
+                    'myArea myArea myArea2 myArea3 myArea4 myArea5 myArea6 .';
+            grid-gap: 2px;
+            background-color: #2196F3;
+            padding: 0px;
+
+
+        }
+        .grid-container>div {
+            background-color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            padding:40px 0;
+            /*font-size: 10px;*/
+        }
+
+
+    </style>
+</head>
+<body>
+
+<h1 align="center">Real-time Sentiments for Live Crowds</h1>
+
+
+<div class="grid-container">
+    <div class="item1"><p>UNIQUE</p><p> 235</p></div>
+    <div class="item2"> <p>THIS HOUR</p> <p>30</p></div>
+    <div class="item3"><p>TODAY</p> <p> 105</p></div>
+    <div class="item4"><p><img src="images/women.svg" width="70" height="150"></p><p>90</p></div>
+    <div class="item5"><p><img src="images/male.png" height="150" width="70"></p><p>145</p></div>
+    <div class="item19">
+        <p>CONFUSED</p><img src="images/confused.png" height="40" width="50"><p>10%</p>
+    </div>
+    <div class="item20">DISGUSTED<img src="images/disgusted.png" height="40" width="50"> </div>
+    <div class="item21">ANGRY <img src="images/angry.svg" height="40" width="50"></div>
+    <div class="item22">CALM <img src="images/calm.png" height="40" width="50"></div>
+    <div class="item23">HAPPY<img src="images/happy.svg" width="40" height="50"> </div>
+    <div class="item24">SAD<img src="images/sad.svg" height="40" width="50"> </div>
+    <div class="item25">ASTONISHED <img src="images/astonished.svg" height="40" width="50"> </div>
+    <div class="item26">SMILING<img src="images/smiling.svg" height="40" width="50"> </div>
+    <div class="item10"><img src="images/beard.png" height="60" width="100"></div>
+    <div class="item11">BEARD 24 % </div>
+    <div class="item12"><img src="images/glasses.svg" height="100" width="170"></div>
+    <div class="item13">GLASSES</div>
+    <div class="item14"><img src="images/sunglasses.svg" height="100" width="170"></div>
+    <div class="item15">SUNGLASSES</div>
+    <div class="item16"><img src="images/mustache.svg" height="100" width="170"></div>
+    <div class="item17">MUSTACHE</div>
+
+</div>
+
+</body>
+</html>
