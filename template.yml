@@ -49,11 +49,11 @@ Resources:
       Type: 'AWS::S3::Bucket'
       Properties:
         BucketName: !Ref WebsiteS3BucketNameParameter
-#        AccessControl: PublicRead
+        AccessControl: PublicRead
 #        WebsiteConfiguration:
 #          IndexDocument: index.html
 #          ErrorDocument: error.html
-#      DeletionPolicy: Retain
+      DeletionPolicy: Retain
 
   ImageProcessorLambdaExecutionRole:
     Type: AWS::IAM::Role
