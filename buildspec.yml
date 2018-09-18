@@ -17,7 +17,7 @@ phases:
     commands:
 
       # Use AWS SAM to package the application by using AWS CloudFormation 
-      - aws s3 mb s3://coxauto-rtva
+      # - aws s3 mb s3://coxauto-rtva
       - aws cloudformation package --template template.yml --s3-bucket coxauto-rtva --output-template template-export.yml
       - aws cloudformation deploy --template-file template-export.yml --stack-name rtva-stack --capabilities CAPABILITY_NAMED_IAM
   
