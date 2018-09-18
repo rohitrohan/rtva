@@ -47,15 +47,15 @@ Resources:
       Properties:
         BucketName: !Ref FrameS3BucketNameParameter
 
-  WebsiteS3Bucket:
-      Type: 'AWS::S3::Bucket'
-      Properties:
-        BucketName: !Ref WebsiteS3BucketNameParameter
-        AccessControl: PublicRead
-        WebsiteConfiguration:
-          IndexDocument: index.html
-          ErrorDocument: error.html
-      DeletionPolicy: Retain
+#  WebsiteS3Bucket:
+#      Type: 'AWS::S3::Bucket'
+#      Properties:
+#        BucketName: !Ref WebsiteS3BucketNameParameter
+#        AccessControl: PublicRead
+#        WebsiteConfiguration:
+#          IndexDocument: index.html
+#          ErrorDocument: error.html
+#      DeletionPolicy: Retain
 
   ImageProcessorLambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -185,17 +185,17 @@ Resources:
 
 
 
-Outputs:
-  WebsiteURL:
-    Value: !GetAtt
-      - WebsiteS3Bucket
-      - WebsiteURL
-    Description: URL for website hosted on S3
-  S3BucketSecureURL:
-    Value: !Join
-      - ''
-      - - 'https://'
-        - !GetAtt
-          - WebsiteS3Bucket
-          - DomainName
-    Description: Name of S3 bucket to hold website content
+#Outputs:
+#  WebsiteURL:
+#    Value: !GetAtt
+#      - WebsiteS3Bucket
+#      - WebsiteURL
+#    Description: URL for website hosted on S3
+#  S3BucketSecureURL:
+#    Value: !Join
+#      - ''
+#      - - 'https://'
+#        - !GetAtt
+#          - WebsiteS3Bucket
+#          - DomainName
+#    Description: Name of S3 bucket to hold website content
