@@ -6,6 +6,10 @@ Transform:
 Description: " Template for the resources required by real time crowd analysis "
 
 Parameters:
+  ProjectId:
+    Type: String
+    Default: "rtva"
+    Description: "CodeStar projectId used to associate new resources to team members"
 
   FrameS3BucketNameParameter:
     Type: String
