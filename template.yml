@@ -127,6 +127,8 @@ Resources:
       EventSourceArn: !GetAtt FrameStream.Arn
       FunctionName: !GetAtt ImageProcessorLambda.Arn
       StartingPosition: "TRIM_HORIZON"
+    DependsOn:
+      - ImageProcessorLambdaPolicy
 
 
 
