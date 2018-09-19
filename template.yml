@@ -46,19 +46,19 @@ Parameters:
 Resources:
 
   FrameS3Bucket:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: !Ref FrameS3BucketNameParameter
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref FrameS3BucketNameParameter
 
   WebsiteS3Bucket:
-      Type: 'AWS::S3::Bucket'
-      Properties:
-        BucketName: !Ref WebsiteS3BucketNameParameter
-        AccessControl: PublicRead
-        WebsiteConfiguration:
-          IndexDocument: index.html
-          ErrorDocument: error.html
-      DeletionPolicy: Retain
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Ref WebsiteS3BucketNameParameter
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+    DeletionPolicy: Retain
 
 
   FrameStream:
