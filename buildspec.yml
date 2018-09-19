@@ -16,7 +16,6 @@ phases:
   
   build:
     commands:
-
       # Use AWS SAM to package the application by using AWS CloudFormation
       - aws cloudformation package --template template.yml --s3-bucket  coxauto-rtva --output-template template-export.yml
 

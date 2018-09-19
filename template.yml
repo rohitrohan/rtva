@@ -4,7 +4,6 @@ Transform: AWS::Serverless-2016-10-31
 Description: 'Template for the resources required by real time crowd analysis'
 
 Parameters:
-
   ProjectId:
     Type: String
     Default: "rtva"
