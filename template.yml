@@ -90,6 +90,8 @@ Resources:
             - lambda.amazonaws.com
           Action:
             - sts:AssumeRole
+    DependsOn:
+      - ImageProcessorLambdaPolicy
 
   ImageProcessorLambdaPolicy:
     Type: AWS::IAM::Policy
@@ -129,6 +131,7 @@ Resources:
       StartingPosition: "TRIM_HORIZON"
     DependsOn:
       - ImageProcessorLambdaExecutionRole
+      - ImageProcessorLambdaPolicy
 
 
 
@@ -258,8 +261,6 @@ Resources:
             AttributeName: "processed_year_month"
           - KeyType: "RANGE"
             AttributeName: "processed_timestamp"
-
-
 
 
 
