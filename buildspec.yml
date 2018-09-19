@@ -12,17 +12,14 @@ phases:
 
       # Discover and run unit tests in the 'tests' directory. For more information, see <https://docs.python.org/3/library/unittest.html#test-discovery>
       # - python -m unittest discover tests
+      pip install -r requirement.txt
   
   build:
     commands:
+      # Use AWS SAM to package the application by using AWS CloudFormation
+      - aws cloudformation package --template template.yml --s3-bucket  coxauto-rtva --output-template template-export.yml
 
-      # Use AWS SAM to package the application by using AWS CloudFormation 
-      # - aws s3 mb s3://coxauto-rtva
-      - aws cloudformation package --template template.yml --s3-bucket coxauto-rtva --output-template template-export.yml
+  post_build:
+    commands:
       - aws cloudformation deploy --template-file template-export.yml --stack-name rtva-stack --capabilities CAPABILITY_NAMED_IAM
-  
 
-artifacts:
-  type: zip
-  files:
-    - template-export.yml

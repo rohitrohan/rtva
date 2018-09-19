@@ -1,0 +1,164 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >
+  This template deploys a set of roles and policies to be used with rtva codebuild project.
+
+Resources:
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: codebuild-rtva-service-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "codebuild.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+
+  CodeBuildBasePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: codebuild-rtva-service-role-policy
+      Roles:
+        - !Ref CodeBuildRole
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource:
+            - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/rtva'
+            - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/rtva:*'
+        - Effect: Allow
+          Action:
+            - cloudformation:DescribeStacks
+          Resource:
+            - !Sub 'arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/rtva*'
+        - Effect: Allow
+          Action:
+            - iam:AttachRolePolicy
+            - iam:CreateRole
+            - iam:DeleteRole
+            - iam:DeleteRolePolicy
+            - iam:DetachRolePolicy
+            - iam:GetRole
+            - iam:PassRole
+            - iam:PutRolePolicy
+            - iam:UpdateAssumeRolePolicy
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - lambda:AddPermission
+            - lambda:CreateFunction
+            - lambda:DeleteFunction
+            - lambda:GetFunction
+            - lambda:GetFunctionConfiguration
+            - lambda:UpdateFunctionConfiguration
+            - lambda:InvokeFunction
+            - lambda:RemovePermission
+            - lambda:TagResource
+            - lambda:UntagResource
+            - lambda:UpdateFunctionCode
+            - lambda:UpdateFunctionConfiguration
+            - lambda:CreateEventSourceMapping
+            - lambda:DeleteEventSourceMapping
+            - lambda:GetEventSourceMapping
+            - lambda:UpdateEventSourceMapping
+            - lambda:ListTags
+            - lambda:TagResource
+            - lambda:UntagResource
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - cloudformation:CreateStack
+            - cloudformation:DescribeStacks
+            - cloudformation:DeleteStack
+            - cloudformation:UpdateStack
+            - cloudformation:CreateChangeSet
+            - cloudformation:ExecuteChangeSet
+            - cloudformation:DeleteChangeSet
+            - cloudformation:DescribeChangeSet
+            - cloudformation:ValidateTemplate
+          Resource: !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*rtva*"
+        - Effect: Allow
+          Action:
+            - cloudformation:GetTemplateSummary
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - cloudformation:CreateChangeSet
+            - cloudformation:ListChangeSets
+          Resource: !Sub "arn:aws:cloudformation:${AWS::Region}:aws:transform/*"
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:GetObjectVersion
+            - s3:PutObject
+            - s3:CreateBucket
+            - s3:DeleteBucket
+            - s3:PutBucketAcl
+            - s3:PutBucketWebsite
+          Resource: !Sub "arn:aws:s3:::*"
+        - Effect: Allow
+          Action:
+            - dynamodb:DescribeStreams
+            - dynamodb:DescribeStream
+            - dynamodb:ListStreams
+            - dynamodb:GetShardIterator
+            - dynamodb:GetRecords
+            - dynamodb:CreateTable
+            - dynamodb:DeleteTable
+            - dynamodb:DescribeTable
+            - dynamodb:DescribeTimeToLive
+            - dynamodb:ListTagsOfResource
+            - dynamodb:TagResource
+            - dynamodb:UntagResource
+            - dynamodb:UpdateTable
+            - dynamodb:UpdateTimeToLive
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - application-autoscaling:*
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - apigateway:*
+          Resource: !Sub "arn:aws:apigateway:${AWS::Region}::/*"
+        - Effect: Allow
+          Action:
+            - SNS:Subscribe
+            - sns:CreateTopic
+            - sns:DeleteTopic
+            - sns:ListTopics
+            - sns:GetTopicAttributes
+            - sns:SetTopicAttributes
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - kinesis:CreateStream
+            - kinesis:DeleteStream
+            - kinesis:DescribeStream
+            - kinesis:GetShardIterator
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - config:DescribeConfigRules
+            - config:PutConfigRule
+            - config:DeleteConfigRule
+          Resource: "*"
+
+Outputs:
+  CodeBuildRole:
+    Value: !Ref CodeBuildRole
+
+  CodeBuildRoleArn:
+    Value: !GetAtt CodeBuildRole.Arn
+
+  CodeBuildBasePolicy:
+    Value: !Ref CodeBuildBasePolicy
