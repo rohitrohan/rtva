@@ -90,8 +90,6 @@ Resources:
             - lambda.amazonaws.com
           Action:
             - sts:AssumeRole
-    DependsOn:
-      - ImageProcessorLambdaPolicy
 
   ImageProcessorLambdaPolicy:
     Type: AWS::IAM::Policy
@@ -121,17 +119,14 @@ Resources:
                     - 'kinesis:ListStreams'
                 Resource: '*'
 
-#  EventSourceMapping:
-#    Type: "AWS::Lambda::EventSourceMapping"
-#    Properties:
-#      BatchSize: 10
-#      Enabled: true
-#      EventSourceArn: !GetAtt FrameStream.Arn
-#      FunctionName: !GetAtt ImageProcessorLambda.Arn
-#      StartingPosition: "TRIM_HORIZON"
-#    DependsOn:
-#      - ImageProcessorLambdaExecutionRole
-#      - ImageProcessorLambdaPolicy
+  EventSourceMapping:
+    Type: "AWS::Lambda::EventSourceMapping"
+    Properties:
+      BatchSize: 10
+      Enabled: true
+      EventSourceArn: !GetAtt FrameStream.Arn
+      FunctionName: !GetAtt ImageProcessorLambda.Arn
+      StartingPosition: "TRIM_HORIZON"
 
 
 
@@ -150,9 +145,6 @@ Resources:
       Runtime: python3.6
       Events:
 
-    DependsOn:
-      - FrameStream
-      - ImageProcessorLambdaExecutionRole
 
 
 
@@ -173,9 +165,6 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
         - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
       Path: "/"
-    DependsOn:
-    - FrameS3Bucket
-    - EnrichedFrameTable
 
 
 
@@ -190,8 +179,6 @@ Resources:
       Timeout: 10 #seconds
       MemorySize: 128 #MB
       Runtime: python3.6
-    DependsOn:
-      - FrameFetcherLambdaExecutionRole
 
 
   RekognitionVideoIAMRole:
