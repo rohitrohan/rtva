@@ -121,17 +121,17 @@ Resources:
                     - 'kinesis:ListStreams'
                 Resource: '*'
 
-  EventSourceMapping:
-    Type: "AWS::Lambda::EventSourceMapping"
-    Properties:
-      BatchSize: 10
-      Enabled: true
-      EventSourceArn: !GetAtt FrameStream.Arn
-      FunctionName: !GetAtt ImageProcessorLambda.Arn
-      StartingPosition: "TRIM_HORIZON"
-    DependsOn:
-      - ImageProcessorLambdaExecutionRole
-      - ImageProcessorLambdaPolicy
+#  EventSourceMapping:
+#    Type: "AWS::Lambda::EventSourceMapping"
+#    Properties:
+#      BatchSize: 10
+#      Enabled: true
+#      EventSourceArn: !GetAtt FrameStream.Arn
+#      FunctionName: !GetAtt ImageProcessorLambda.Arn
+#      StartingPosition: "TRIM_HORIZON"
+#    DependsOn:
+#      - ImageProcessorLambdaExecutionRole
+#      - ImageProcessorLambdaPolicy
 
 
 
