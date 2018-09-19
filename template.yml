@@ -10,10 +10,10 @@ Parameters:
     Default: "rtva"
     Description: "CodeStar projectId used to associate new resources to team members"
 
-  FrameS3BucketNameParameter:
+  KnownFacesS3BucketNameParameter:
     Type: String
     MinLength : "1"
-    Default: "coxauto-frame-bucket"
+    Default: "rtva-known-faces"
     Description: "Name of the S3 bucket for storage of captured frames."
 
   WebsiteS3BucketNameParameter:
@@ -45,10 +45,10 @@ Parameters:
 
 Resources:
 
-  FrameS3Bucket:
+  KnownFacesS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Ref FrameS3BucketNameParameter
+      BucketName: !Ref KnownFacesS3BucketNameParameter
 
   WebsiteS3Bucket:
     Type: 'AWS::S3::Bucket'
@@ -61,7 +61,7 @@ Resources:
     DeletionPolicy: Retain
 
 
-  FrameStream:
+  KinesisDataStream:
     Type: "AWS::Kinesis::Stream"
     Properties:
       Name: !Ref KinesisStreamNameParameter
@@ -112,7 +112,7 @@ Resources:
                     - 'kinesis:GetShardIterator'
                     - 'kinesis:DescribeStream'
                     - 'kinesis:ListStreams'
-                Resource: !GetAtt FrameStream.Arn
+                Resource: !GetAtt KinesisDataStream.Arn
               -
                 Effect: Allow
                 Action:
@@ -124,7 +124,7 @@ Resources:
     Properties:
       BatchSize: 10
       Enabled: true
-      EventSourceArn: !GetAtt FrameStream.Arn
+      EventSourceArn: !GetAtt KinesisDataStream.Arn
       FunctionName: !GetAtt ImageProcessorLambda.Arn
       StartingPosition: "TRIM_HORIZON"
     DependsOn:
@@ -208,7 +208,7 @@ Resources:
                 Effect: Allow
                 Action:
                     - 'kinesis:*'
-                Resource: !GetAtt FrameStream.Arn
+                Resource: !GetAtt KinesisDataStream.Arn
               -
                 Effect: Allow
                 Action:
@@ -272,7 +272,7 @@ Outputs:
 
   KinesisDataStreamArn:
     Description: Kinesis Data Stream Arn (used in Stream Processer Input)
-    Value: !GetAtt FrameStream.Arn
+    Value: !GetAtt KinesisDataStream.Arn
 
   RekognitionVideoIAM:
     Description: Rekognition Video Processing IAM Arn (used in Stream Processer Input)

@@ -69,6 +69,7 @@ Resources:
             - lambda:CreateEventSourceMapping
             - lambda:DeleteEventSourceMapping
             - lambda:GetEventSourceMapping
+            - lambda:UpdateEventSourceMapping
             - lambda:ListTags
             - lambda:TagResource
             - lambda:UntagResource
@@ -143,6 +144,7 @@ Resources:
             - kinesis:CreateStream
             - kinesis:DeleteStream
             - kinesis:DescribeStream
+            - kinesis:GetShardIterator
           Resource: "*"
         - Effect: Allow
           Action:
