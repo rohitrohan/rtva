@@ -37,8 +37,8 @@ Parameters:
     Default: "processed_year_month-processed_timestamp-index"
     Description: "Name of the DDB Global Secondary Index for querying of captured frames by Web UI."
 
-   EmailAddress:
-    Description: Email address used for SNS notification whenever people are found in video
+  EmailAddress:
+    Description: "Email address used for SNS notification whenever people are found in video"
     Type: String
     Default: "Rohit.Rohan@coxautoinc.com"
 
