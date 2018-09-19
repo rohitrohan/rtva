@@ -101,6 +101,8 @@ Resources:
             - s3:PutObject
             - s3:CreateBucket
             - s3:DeleteBucket
+            - s3:PutBucketAcl
+            - s3:PutBucketWebsite
           Resource: !Sub "arn:aws:s3:::*"
         - Effect: Allow
           Action:

@@ -24,8 +24,8 @@ Parameters:
 
   KinesisStreamNameParameter:
     Type: String
-    Default: "FrameStream"
-    Description: "Name of the Kinesis stream to receive frames from video capture client."
+    Default: "rtva-kinesis-data-stream"
+    Description: "Name of the Kinesis data stream to receive frames from Recognition video."
 
   DDBTableNameParameter:
     Type: String
@@ -36,6 +36,11 @@ Parameters:
     Type: String
     Default: "processed_year_month-processed_timestamp-index"
     Description: "Name of the DDB Global Secondary Index for querying of captured frames by Web UI."
+
+   EmailAddress:
+    Description: Email address used for SNS notification whenever people are found in video
+    Type: String
+    Default: "Rohit.Rohan@coxautoinc.com"
 
 
 Resources:
@@ -55,6 +60,24 @@ Resources:
           ErrorDocument: error.html
       DeletionPolicy: Retain
 
+
+  FrameStream:
+    Type: "AWS::Kinesis::Stream"
+    Properties:
+      Name: !Ref KinesisStreamNameParameter
+      ShardCount: 1
+
+
+  SNSTopic:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      DisplayName: !Sub ${ProjectId} SNS Topic
+      Subscription:
+        -
+          Endpoint: !Sub ${EmailAddress}
+          Protocol: email
+
+
   ImageProcessorLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -67,27 +90,65 @@ Resources:
             - lambda.amazonaws.com
           Action:
             - sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonKinesisReadOnlyAccess
-        - arn:aws:iam::aws:policy/AmazonRekognitionReadOnlyAccess
-        - arn:aws:iam::aws:policy/AmazonS3FullAccess
-        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
-        - arn:aws:iam::aws:policy/AmazonSNSFullAccess
-        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
-      Path: "/"
-    DependsOn:
-      - FrameS3Bucket
-      - EnrichedFrameTable
+
+  ImageProcessorLambdaPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub ${ProjectId}-image-processor-lambda-policy
+      Roles:
+        - !Ref ImageProcessorLambdaExecutionRole
+      PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                    - 'sns:Publish'
+                Resource: !Ref SNSTopic
+              -
+                Effect: Allow
+                Action:
+                    - 'kinesis:GetRecords'
+                    - 'kinesis:GetShardIterator'
+                    - 'kinesis:DescribeStream'
+                    - 'kinesis:ListStreams'
+                Resource: !GetAtt FrameStream.Arn
+              -
+                Effect: Allow
+                Action:
+                    - 'kinesis:ListStreams'
+                Resource: '*'
 
   EventSourceMapping:
     Type: "AWS::Lambda::EventSourceMapping"
     Properties:
+      BatchSize: 10
+      Enabled: true
       EventSourceArn: !GetAtt FrameStream.Arn
       FunctionName: !GetAtt ImageProcessorLambda.Arn
       StartingPosition: "TRIM_HORIZON"
+
+
+
+
+
+  ImageProcessorLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: imageprocessor
+      Description: "Function processes frame images fetched from a Kinesis stream."
+      Handler: "lambda/imageprocessor.handler"
+      Role: !GetAtt ImageProcessorLambdaExecutionRole.Arn
+      CodeUri: .
+      Timeout: 40 #seconds
+      MemorySize: 128 #MB
+      Runtime: python3.6
+      Events:
+
     DependsOn:
       - FrameStream
-      - ImageProcessorLambda
+      - ImageProcessorLambdaExecutionRole
+
 
 
   FrameFetcherLambdaExecutionRole:
@@ -112,30 +173,6 @@ Resources:
     - EnrichedFrameTable
 
 
-  FrameStream:
-    Type: "AWS::Kinesis::Stream"
-    Properties:
-      Name: !Ref KinesisStreamNameParameter
-      ShardCount: 1
-
-
-  ImageProcessorLambda:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: imageprocessor
-      Description: "Function processes frame images fetched from a Kinesis stream."
-      Handler: "lambda/imageprocessor.handler"
-      Role: !GetAtt ImageProcessorLambdaExecutionRole.Arn
-      CodeUri: .
-      Timeout: 40 #seconds
-      MemorySize: 128 #MB
-      Runtime: python3.6
-      Events:
-
-    DependsOn:
-      - FrameStream
-      - ImageProcessorLambdaExecutionRole
-
 
   FrameFetcherLambda:
     Type: AWS::Serverless::Function
@@ -150,6 +187,45 @@ Resources:
       Runtime: python3.6
     DependsOn:
       - FrameFetcherLambdaExecutionRole
+
+
+  RekognitionVideoIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service: rekognition.amazonaws.com
+            Action: sts:AssumeRole
+
+  RekognitionVideoPolicy:
+     Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub ${ProjectId}-recognition-video-policy
+      Roles:
+        - !Ref RekognitionVideoIAMRole
+      PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                    - 'kinesis:*'
+                Resource: !GetAtt FrameStream.Arn
+              -
+                Effect: Allow
+                Action:
+                    - 'kinesisvideo:*'
+                Resource: '*'
+              -
+                Effect: Allow
+                Action:
+                    - 'rekognition:*'
+                Resource: '*'
+
 
   EnrichedFrameTable:
     Type: "AWS::DynamoDB::Table"
@@ -183,12 +259,16 @@ Resources:
 
 
 
+
+
 Outputs:
+
   WebsiteURL:
     Value: !GetAtt
       - WebsiteS3Bucket
       - WebsiteURL
     Description: URL for website hosted on S3
+
   S3BucketSecureURL:
     Value: !Join
       - ''
@@ -197,3 +277,11 @@ Outputs:
           - WebsiteS3Bucket
           - DomainName
     Description: Name of S3 bucket to hold website content
+
+  KinesisDataStreamArn:
+    Description: Kinesis Data Stream Arn (used in Stream Processer Input)
+    Value: !GetAtt FrameStream.Arn
+
+  RekognitionVideoIAM:
+    Description: Rekognition Video Processing IAM Arn (used in Stream Processer Input)
+    Value: !GetAtt RekognitionVideoIAMRole.Arn
