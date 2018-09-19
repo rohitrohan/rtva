@@ -203,7 +203,7 @@ Resources:
 
   RekognitionVideoPolicy:
      Type: AWS::IAM::Policy
-    Properties:
+     Properties:
       PolicyName: !Sub ${ProjectId}-recognition-video-policy
       Roles:
         - !Ref RekognitionVideoIAMRole
